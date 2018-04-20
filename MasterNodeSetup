@@ -1,0 +1,203 @@
+
+This MasterNode Setup Guide Prepared For Folm Masternode Owners
+
+<in brackets> - User Specific Variables
+
+
+==================
+Step 0: START FOLM DAEMON
+
+~/folm-3.2.2-ubuntu16.04/folmd -daemon
+
+//Your wallet synchronisation will be start.
+==================
+
+
+==================
+Step 1: CREATE NEW WALLET FOR MASTERNODE
+
+<walletname> -  MN1
+
+~/folm-3.2.2-ubuntu16.04/folm-cli getnewaddress "<welletname>"
+<walletaddress>
+
+//Save your wallet address
+==================
+
+
+==================
+Step 2: SAVE WALLET PRIVATE KEY
+
+~/folm-3.2.2-ubuntu16.04/film-cli dumpprivkey "<welletname>"
+<walletprivatekey>
+
+// Do not forget to save your private key (required for wallet import in case of troubles)
+==================
+
+
+==================
+Step 3: GENERATE MASTERNODE PRIVATE KEY
+
+~/folm-3.2.2-ubuntu16.04/folm-cli masternode genkey
+<masternodeprivatekey>
+
+//This info will be needed for masternode.conf on next steps.
+==================
+
+
+==================
+Step 4: TRANSFER 5000 FLM TO <walletaddress> AND WAIT FOR CONFIRMATION
+BEFORE TO PROCEED MAKE SURE YOU HAVE 5000 FLM:
+
+~/folm-3.2.2-ubuntu16.04/folm-cli getbalance "<walletname>"
+5000.00000000
+==================
+
+
+==================
+Step 5: GET TRANSACTION INFO FOR MASTERNODE ACIVATION.
+
+~/folm-3.2.2-ubuntu16.04/folm-cli masternode outputs
+[
+    {
+        "txhash" : "<txhash>",
+        "outputidx" : <txindex>
+    }
+]
+$
+==================
+
+
+==================
+Step 6: REQUIRED ADDITIONAL INFORMATION:
+
+<externalip> // you can get it in AWS console -> Instances -> IPv4 Public IP
+<rpcuser> // you can define any
+<rpcpassword> // you can define any
+==================
+
+
+==================
+Step 7: PREPARE masternode.conf FILE.
+
+<masternodealias> //can be any, for simplicity you can use mn1.
+<masternodeprivatekey> // output on Step 3
+<txhash> // output on Step 5
+<txindex> // output on Step 5
+
+nano ~/.folm/masternode.conf
+
+//Add new line with data separated by spaces (you can copy and paste):
+
+<masternodealias> <externalip>:53656 <masternodeprivatekey> <txhash> <txindex>
+
+Save file using:
+Ctrl-X
+Y
+Enter
+==================
+
+
+==================
+Step 8: PREPARE folm.conf FILE
+
+nano ~/.folm/folm.conf
+
+//Add below information to the file (you can copy and paste):
+
+daemon=1
+rpcuser=<rpcuser>
+rpcpassword=<rpcpassword>
+rpcconnect=127.0.0.1
+rpcallowip=127.0.0.1
+rpcport=53654
+externalip=<externalip>
+port=53656
+maxconnections=256
+server=1
+listen=1
+logtimestamps=1
+masternode=1
+masternodeaddr=<externalip>:53656
+masternodeprivkey=<masternodeprivatekey>
+
+Save file using:
+Ctrl-X
+Y
+Enter
+==================
+
+
+==================
+Step 9: CHECK FOR NODE SYNCHRONISATION (required for masternode fast start).
+
+//Get current blockchain height:
+
+~/folm-3.2.2-ubuntu16.04/folm-cli getblockcount
+ 35554
+
+//Get daemon synchronisation block (field "blocks" in output below):
+
+~/folm-3.2.2-ubuntu16.04/folm-cli getinfo
+{
+    "version" : 3020200,
+    "protocolversion" : 70910,
+    "walletversion" : 61000,
+    "balance" : 5000.00000000,
+    "obfuscation_balance" : 0.00000000,
+    "blocks" : 35554,
+    "timeoffset" : 0,
+    "connections" : 35,
+    "proxy" : "",
+    "difficulty" : 1525.38943959,
+    "testnet" : false,
+    "keypoololdest" : 1523376539,
+    "keypoolsize" : 1001,
+    "paytxfee" : 0.00000000,
+    "relayfee" : 0.00010000,
+    "staking status" : "Staking Not Active",
+    "errors" : ""
+}
+$
+
+//Continue when heights about to equal
+==================
+
+
+==================
+Step 10: RESTART DAEMON TO CATCH THE SETTINGS
+
+Stop daemon.
+~/folm-3.2.2-ubuntu16.04/folm-cli stop
+Folm server stopping
+
+Start daemon.
+~/folm-3.2.2-ubuntu16.04/folmd -daemon
+Folm server starting
+
+==================
+
+
+==================
+Step 11: START MASTERNODE INSTANCE.
+
+~/folm-3.2.2-ubuntu16.04/folm-cli startmasternode alias false <masternodealias>
+
+//Possible outputs showing success:
+a) Masternode successfully started (You're Welcome)
+b) Sync in progress. Must wait until sync is complete to start Masternode
+
+In case of b), wait for some time and repeat Step 9
+
+//To Check Your Masternode Status ?
+
+~/folm-3.2.2-ubuntu16.04/folm-cli masternode status
+{
+    "txhash" : "<txhash>",
+    "outputidx" : 0,
+    "netaddr" : "<externalip>:53656",
+    "addr" : "<walletaddress>",
+    "status" : 4,
+    "message" : "Masternode successfully started"
+}
+==================
